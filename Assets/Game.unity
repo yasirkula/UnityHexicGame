@@ -207,6 +207,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5fa72508d0750174e8a4559d69742a6b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  swipeAmount: 15
 --- !u!1 &306181649
 GameObject:
   m_ObjectHideFlags: 0
@@ -466,7 +467,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   inputReceiver: {fileID: 245580054}
-  gridSelection: {fileID: 0}
+  gridSelection: {fileID: 8211838309725779889, guid: 94b82ff3e1eee7347ab14b8c34baf941,
+    type: 3}
 --- !u!1 &1976193276
 GameObject:
   m_ObjectHideFlags: 0

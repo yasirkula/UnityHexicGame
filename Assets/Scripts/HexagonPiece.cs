@@ -10,6 +10,13 @@ public struct HexagonTuple
 		this.piece2 = piece2;
 		this.piece3 = piece3;
 	}
+
+	public void SetSelected( bool isSelected )
+	{
+		piece1.SetSelected( isSelected );
+		piece2.SetSelected( isSelected );
+		piece3.SetSelected( isSelected );
+	}
 }
 
 public enum Corner { BottomLeft, Left, TopLeft, TopRight, Right, BottomRight };
@@ -27,6 +34,11 @@ public class HexagonPiece : MonoBehaviour
 	{
 		ColorIndex = colorIndex;
 		spriteRenderer.color = color;
+	}
+
+	public void SetSelected( bool isSelected )
+	{
+		spriteRenderer.sortingOrder = isSelected ? 1 : 0;
 	}
 
 	public Corner GetClosestCorner( Vector2 localPoint )

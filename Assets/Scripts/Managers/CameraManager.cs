@@ -27,6 +27,11 @@ public class CameraManager : ManagerBase<CameraManager>
 		return _camera.ScreenToWorldPoint( screenPoint );
 	}
 
+	public Vector2 WorldToScreenPoint( Vector3 worldPoint )
+	{
+		return _camera.WorldToScreenPoint( worldPoint );
+	}
+
 	private void RecalculateOrthographicSize()
 	{
 		if( gridExtents == null )
