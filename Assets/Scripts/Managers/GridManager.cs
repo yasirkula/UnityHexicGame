@@ -60,6 +60,8 @@ public class GridManager : ManagerBase<GridManager>
 	private readonly List<HexagonMatch> matchesOnGrid = new List<HexagonMatch>( 4 );
 	private readonly HashSet<HexagonPiece> matchesOnGridSet = new HashSet<HexagonPiece>();
 
+	private bool isQuitting = false;
+
 	private Column[] grid;
 	private Vector2 gridSize;
 
@@ -72,6 +74,17 @@ public class GridManager : ManagerBase<GridManager>
 			gridSize = new Vector3( gridWidth * PIECE_WIDTH - ( gridWidth - 1 ) * PIECES_INTERSECTION_WIDTH, gridHeight * PIECE_HEIGHT + PIECE_HEIGHT * 0.5f, 0f );
 			CameraManager.Instance.SetGridBounds( new Bounds( gridSize * 0.5f, gridSize ) );
 		}
+	}
+
+	private void OnApplicationQuit()
+	{
+		isQuitting = true;
+	}
+
+	private void OnDestroy()
+	{
+		if( !isQuitting )
+			DestroyGrid();
 	}
 
 	private bool CreateGrid()
@@ -92,19 +105,36 @@ public class GridManager : ManagerBase<GridManager>
 		for( int x = 0; x < gridWidth; x++ )
 			grid[x] = new Column( x, gridHeight );
 
-		for( int x = 0; x < gridWidth; x++ )
+		while( true )
 		{
-			for( int y = 0; y < gridHeight; y++ )
+			for( int x = 0; x < gridWidth; x++ )
 			{
-				HexagonPiece piece = PoolManager.Instance.PopPiece();
-				grid[x][y] = piece;
+				for( int y = 0; y < gridHeight; y++ )
+				{
+					HexagonPiece piece = PoolManager.Instance.PopPiece();
+					grid[x][y] = piece;
 
-				piece.transform.localPosition = grid[x].CalculatePositionAt( y );
-				RandomizePieceColor( piece, true );
+					piece.transform.localPosition = grid[x].CalculatePositionAt( y );
+					RandomizePieceColor( piece, true );
+				}
 			}
+
+			if( !CheckDeadlock() )
+				break;
+
+			DestroyGrid();
 		}
 
 		return true;
+	}
+
+	private void DestroyGrid()
+	{
+		for( int x = 0; x < gridWidth; x++ )
+		{
+			for( int y = 0; y < gridHeight; y++ )
+				PoolManager.Instance.Push( grid[x][y] );
+		}
 	}
 
 	private void RandomizePieceColor( HexagonPiece piece, bool ensureNonMatchingColor )
@@ -198,6 +228,42 @@ public class GridManager : ManagerBase<GridManager>
 		return new HexagonTuple();
 	}
 
+	public bool CheckDeadlock()
+	{
+		matchesOnGridSet.Clear();
+
+		// We can skip odd columns, if there is a match, it will be found while iterating the even columns
+		for( int x = 0; x < gridWidth; x += 2 )
+		{
+			for( int y = 0; y < gridHeight; y++ )
+			{
+				for( int i = 0; i < 6; i++ )
+				{
+					HexagonTuple tuple = GetTupleAtCorner( x, y, (HexagonPiece.Corner) i );
+					if( !tuple.IsEmpty )
+					{
+						for( int j = 0; j < 2; j++ )
+						{
+							tuple.RotateClockwise();
+							HexagonMatch match = GetMatchingPiecesAt( tuple );
+							if( match != null )
+							{
+								PoolManager.Instance.Push( match );
+								tuple.RotateClockwise( 2 - j );
+
+								return false;
+							}
+						}
+
+						tuple.RotateClockwise();
+					}
+				}
+			}
+		}
+
+		return true;
+	}
+
 	public List<HexagonMatch> GetAllMatchingPiecesOnGrid()
 	{
 		matchesOnGrid.Clear();
@@ -242,7 +308,7 @@ public class GridManager : ManagerBase<GridManager>
 		if( result.Count > 0 )
 			return result;
 
-		PoolManager.Instance.PushMatch( result );
+		PoolManager.Instance.Push( result );
 		return null;
 	}
 
@@ -278,7 +344,7 @@ public class GridManager : ManagerBase<GridManager>
 			for( int i = match.Count - 1; i >= 0; i-- )
 			{
 				grid[match[i].X][match[i].Y] = null;
-				PoolManager.Instance.PushPiece( match[i] );
+				AnimationManager.Instance.BlowPieceAway( match[i] );
 			}
 		}
 	}
@@ -313,7 +379,7 @@ public class GridManager : ManagerBase<GridManager>
 						}
 					}
 
-					AnimationManager.Instance.AnimatePiece( grid[x][y] );
+					AnimationManager.Instance.MovePieceToPosition( grid[x][y] );
 				}
 
 				Vector2 fallingPieceStartPoint = new Vector2( grid[x].XCoord, CameraManager.Instance.YTop );
@@ -329,7 +395,7 @@ public class GridManager : ManagerBase<GridManager>
 					piece.transform.localPosition = fallingPieceStartPoint;
 					fallingPieceStartPoint.y += PIECE_DELTA_Y;
 
-					AnimationManager.Instance.AnimatePiece( piece );
+					AnimationManager.Instance.MovePieceToPosition( piece );
 				}
 			}
 		}

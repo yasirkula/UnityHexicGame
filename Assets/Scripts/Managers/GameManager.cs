@@ -14,9 +14,11 @@ public class GameManager : ManagerBase<GameManager>
 #pragma warning restore 0649
 
 	private bool isBusy = false;
+	private int score = 0;
 
 	protected override void Awake()
 	{
+		base.Awake();
 		selection = Instantiate( selection );
 	}
 
@@ -44,20 +46,20 @@ public class GameManager : ManagerBase<GameManager>
 
 		Vector2 center = CameraManager.Instance.WorldToScreenPoint( selection.transform.localPosition );
 		bool clockwise = Vector2.SignedAngle( eventData.pressPosition - center, eventData.position - center ) < 0f;
-		int rotationAmount = 0;
 
+		int rotationAmount;
 		HexagonMatch match = null;
-		do
+		for( rotationAmount = 1; rotationAmount < 3; rotationAmount++ )
 		{
-			if( clockwise )
-				selection.Tuple.RotateClockwise();
-			else
-				selection.Tuple.RotateCounterClockwise();
+			selection.Tuple.RotateClockwise( clockwise ? 1 : -1 );
+			match = GridManager.Instance.GetMatchingPiecesAt( selection.Tuple );
+			if( match != null )
+				break;
+		}
 
-			if( rotationAmount < 2 )
-				match = GridManager.Instance.GetMatchingPiecesAt( selection.Tuple );
-		} while( ++rotationAmount < 3 && ( match == null || match.Count == 0 ) );
-
+		if( match == null )
+			selection.Tuple.RotateClockwise( clockwise ? 1 : -1 );
+		
 		StartCoroutine( RotateTuple( clockwise, rotationAmount, match ) );
 	}
 
@@ -66,32 +68,57 @@ public class GameManager : ManagerBase<GameManager>
 		isBusy = true;
 		yield return StartCoroutine( AnimationManager.Instance.RotateSelection( selection, amount * ( clockwise ? -120f : 120f ) ) );
 
-		if( match != null && match.Count > 0 )
+		if( match != null )
 		{
 			selection.IsVisible = false;
 
-			GridManager.Instance.DestroyMatchingPieces( match );
-			PoolManager.Instance.PushMatch( match );
+			yield return new WaitForSeconds( 0.5f );
+			ProcessMatch( match );
 
 			yield return StartCoroutine( GridManager.Instance.FillBlankSlots() );
 
 			List<HexagonMatch> matchesOnGrid = GridManager.Instance.GetAllMatchingPiecesOnGrid();
 			while( matchesOnGrid != null && matchesOnGrid.Count > 0 )
 			{
+				yield return new WaitForSeconds( 0.5f );
 				for( int i = 0; i < matchesOnGrid.Count; i++ )
-				{
-					GridManager.Instance.DestroyMatchingPieces( matchesOnGrid[i] );
-					PoolManager.Instance.PushMatch( matchesOnGrid[i] );
-				}
+					ProcessMatch( matchesOnGrid[i] );
 
 				yield return StartCoroutine( GridManager.Instance.FillBlankSlots() );
-
 				matchesOnGrid = GridManager.Instance.GetAllMatchingPiecesOnGrid();
 			}
 
 			selection.SelectTupleAt( selection.transform.localPosition );
 		}
 
-		isBusy = false;
+		if( GridManager.Instance.CheckDeadlock() )
+			GameOver();
+		else
+			isBusy = false;
+	}
+
+	private void ProcessMatch( HexagonMatch match )
+	{
+		score += 5 * match.Count;
+		
+		UIManager.Instance.UpdateScore( score );
+		GridManager.Instance.DestroyMatchingPieces( match );
+		PoolManager.Instance.Push( match );
+	}
+
+	private void GameOver()
+	{
+		isBusy = true;
+		
+		int highscore = PlayerPrefs.GetInt( "Highscore", 0 );
+		if( score > highscore )
+		{
+			highscore = score;
+
+			PlayerPrefs.SetInt( "Highscore", score );
+			PlayerPrefs.Save();
+		}
+
+		UIManager.Instance.GameOver( score, highscore );
 	}
 }

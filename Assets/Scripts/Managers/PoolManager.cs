@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class PoolManager : ManagerBase<PoolManager>
@@ -9,103 +8,80 @@ public class PoolManager : ManagerBase<PoolManager>
 	private HexagonPiece piecePrefab;
 #pragma warning restore 0649
 
-	private readonly List<HexagonPiece> piecePool = new List<HexagonPiece>( 32 );
-	private readonly List<HexagonMatch> matchPool = new List<HexagonMatch>( 8 );
-	private readonly List<AnimationManager.MoveAnimation> moveAnimationsPool = new List<AnimationManager.MoveAnimation>( 64 );
+	private readonly SimplePool<HexagonPiece> piecePool = new SimplePool<HexagonPiece>();
+	private readonly SimplePool<HexagonMatch> matchPool = new SimplePool<HexagonMatch>();
+	private readonly SimplePool<AnimationManager.MovePieceAnimation> moveAnimationsPool = new SimplePool<AnimationManager.MovePieceAnimation>();
+	private readonly SimplePool<AnimationManager.BlowPieceAnimation> blowAnimationsPool = new SimplePool<AnimationManager.BlowPieceAnimation>();
 
 	protected override void Awake()
 	{
 		base.Awake();
 
-		transform.SetParent( null, false );
-		DontDestroyOnLoad( gameObject );
-	}
-
-	public void PushPiece( HexagonPiece piece )
-	{
-#if UNITY_EDITOR
-		for( int i = 0; i < piecePool.Count; i++ )
+		if( Instance == this )
 		{
-			if( piecePool[i] == piece )
-				throw new System.Exception( "Object is already in pool!" );
-		}
-#endif
+			transform.SetParent( null, false );
+			DontDestroyOnLoad( gameObject );
 
-		piece.gameObject.SetActive( false );
-		piecePool.Add( piece );
+			piecePool.CreateFunction = () =>
+			{
+				HexagonPiece result = Instantiate( piecePrefab );
+				SceneManager.MoveGameObjectToScene( result.gameObject, gameObject.scene ); // So that the piece will be DontDestroyOnLoad
+
+				return result;
+			};
+			piecePool.OnPop = ( piece ) => piece.gameObject.SetActive( true );
+			piecePool.OnPush = ( piece ) => piece.gameObject.SetActive( false );
+			piecePool.Populate( 32 );
+
+			matchPool.CreateFunction = () => new HexagonMatch();
+			matchPool.OnPush = ( match ) => match.Clear();
+			matchPool.Populate( 8 );
+
+			moveAnimationsPool.CreateFunction = () => new AnimationManager.MovePieceAnimation();
+			moveAnimationsPool.Populate( 64 );
+
+			blowAnimationsPool.CreateFunction = () => new AnimationManager.BlowPieceAnimation();
+			blowAnimationsPool.Populate( 8 );
+		}
 	}
 
 	public HexagonPiece PopPiece()
 	{
-		HexagonPiece result;
-		if( piecePool.Count > 0 )
-		{
-			result = piecePool[piecePool.Count - 1];
-			result.gameObject.SetActive( true );
-
-			piecePool.RemoveAt( piecePool.Count - 1 );
-		}
-		else
-		{
-			result = Instantiate( piecePrefab );
-			SceneManager.MoveGameObjectToScene( result.gameObject, gameObject.scene ); // So that the piece will be DontDestroyOnLoad
-		}
-
-		return result;
-	}
-
-	public void PushMatch( HexagonMatch match )
-	{
-#if UNITY_EDITOR
-		for( int i = 0; i < matchPool.Count; i++ )
-		{
-			if( matchPool[i] == match )
-				throw new System.Exception( "Object is already in pool!" );
-		}
-#endif
-
-		match.Clear();
-		matchPool.Add( match );
+		return piecePool.Pop();
 	}
 
 	public HexagonMatch PopMatch()
 	{
-		HexagonMatch result;
-		if( matchPool.Count > 0 )
-		{
-			result = matchPool[matchPool.Count - 1];
-			matchPool.RemoveAt( matchPool.Count - 1 );
-		}
-		else
-			result = new HexagonMatch();
-
-		return result;
+		return matchPool.Pop();
 	}
 
-	public void PushMoveAnimation( AnimationManager.MoveAnimation moveAnimation )
+	public AnimationManager.MovePieceAnimation PopMoveAnimation()
 	{
-#if UNITY_EDITOR
-		for( int i = 0; i < moveAnimationsPool.Count; i++ )
-		{
-			if( moveAnimationsPool[i] == moveAnimation )
-				throw new System.Exception( "Object is already in pool!" );
-		}
-#endif
-
-		moveAnimationsPool.Add( moveAnimation );
+		return moveAnimationsPool.Pop();
 	}
 
-	public AnimationManager.MoveAnimation PopMoveAnimation()
+	public AnimationManager.BlowPieceAnimation PopBlowAnimation()
 	{
-		AnimationManager.MoveAnimation result;
-		if( moveAnimationsPool.Count > 0 )
-		{
-			result = moveAnimationsPool[moveAnimationsPool.Count - 1];
-			moveAnimationsPool.RemoveAt( moveAnimationsPool.Count - 1 );
-		}
-		else
-			result = new AnimationManager.MoveAnimation();
+		return blowAnimationsPool.Pop();
+	}
 
-		return result;
+	public void Push( HexagonPiece piece )
+	{
+		piecePool.Push( piece );
+	}
+
+	public void Push( HexagonMatch match )
+	{
+		matchPool.Push( match );
+	}
+
+	public void Push( AnimationManager.MovePieceAnimation moveAnimation )
+	{
+		moveAnimationsPool.Push( moveAnimation );
+	}
+
+	public void Push( AnimationManager.BlowPieceAnimation blowAnimation )
+	{
+		blowAnimationsPool.Push( blowAnimation );
 	}
 }

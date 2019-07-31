@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class AnimationManager : ManagerBase<AnimationManager>
 {
-	public class MoveAnimation
+	public class MovePieceAnimation
 	{
 		private HexagonPiece piece;
 		private Vector2 initialPosition;
@@ -37,17 +37,60 @@ public class AnimationManager : ManagerBase<AnimationManager>
 		}
 	}
 
+	public class BlowPieceAnimation
+	{
+		private HexagonPiece piece;
+		private Vector2 velocity;
+
+		private float t;
+		private float tMultiplier;
+
+		public void Initialize( HexagonPiece piece, float animationSpeed )
+		{
+			this.piece = piece;
+			velocity = ( Random.insideUnitCircle + new Vector2( 0f, 0.15f ) ) * ( GridManager.Instance.Width * 1.2f );
+
+			t = 0f;
+			tMultiplier = animationSpeed;
+
+			piece.SortingOrder = 2;
+		}
+
+		public bool Execute( float deltaTime )
+		{
+			t += deltaTime * tMultiplier;
+			velocity.y -= deltaTime * 10f;
+			if( t < 1f )
+			{
+				piece.transform.Translate( velocity * deltaTime );
+				piece.transform.localScale = new Vector3( 1f - t, 1f - t, 1f - t );
+
+				return true;
+			}
+
+			piece.transform.localScale = new Vector3( 1f, 1f, 1f );
+			piece.SortingOrder = 0;
+			PoolManager.Instance.Push( piece );
+
+			return false;
+		}
+	}
+
 #pragma warning disable 0649
 	[SerializeField]
-	private float animationSpeed = 10f;
+	private float moveAnimationSpeed = 7.5f;
 
 	[SerializeField]
-	private float selectionRotateSpeed = 150f;
+	private float blowAnimationSpeed = 2f;
+
+	[SerializeField]
+	private float selectionRotateSpeed = 700f;
 #pragma warning restore 0649
 
 	public bool IsAnimating { get { return moveAnimations.Count > 0; } }
 
-	private readonly List<MoveAnimation> moveAnimations = new List<MoveAnimation>( 64 );
+	private readonly List<MovePieceAnimation> moveAnimations = new List<MovePieceAnimation>( 64 );
+	private readonly List<BlowPieceAnimation> blowAnimations = new List<BlowPieceAnimation>( 8 );
 
 	private void Update()
 	{
@@ -57,10 +100,9 @@ public class AnimationManager : ManagerBase<AnimationManager>
 
 		for( int i = moveAnimations.Count - 1; i >= 0; i-- )
 		{
-			MoveAnimation moveOperation = moveAnimations[i];
 			if( !moveAnimations[i].Execute( deltaTime ) )
 			{
-				PoolManager.Instance.PushMoveAnimation( moveAnimations[i] );
+				PoolManager.Instance.Push( moveAnimations[i] );
 
 				// This move operation has finished, move the last move operation to this index
 				if( i < moveAnimations.Count - 1 )
@@ -69,13 +111,34 @@ public class AnimationManager : ManagerBase<AnimationManager>
 				moveAnimations.RemoveAt( moveAnimations.Count - 1 );
 			}
 		}
+
+		for( int i = blowAnimations.Count - 1; i >= 0; i-- )
+		{
+			if( !blowAnimations[i].Execute( deltaTime ) )
+			{
+				PoolManager.Instance.Push( blowAnimations[i] );
+
+				// This blow operation has finished, move the last blow operation to this index
+				if( i < blowAnimations.Count - 1 )
+					blowAnimations[i] = blowAnimations[blowAnimations.Count - 1];
+
+				blowAnimations.RemoveAt( blowAnimations.Count - 1 );
+			}
+		}
 	}
 
-	public void AnimatePiece( HexagonPiece piece )
+	public void MovePieceToPosition( HexagonPiece piece )
 	{
-		MoveAnimation moveAnimation = PoolManager.Instance.PopMoveAnimation();
-		moveAnimation.Initialize( piece, animationSpeed );
+		MovePieceAnimation moveAnimation = PoolManager.Instance.PopMoveAnimation();
+		moveAnimation.Initialize( piece, moveAnimationSpeed );
 		moveAnimations.Add( moveAnimation );
+	}
+
+	public void BlowPieceAway( HexagonPiece piece )
+	{
+		BlowPieceAnimation blowAnimation = PoolManager.Instance.PopBlowAnimation();
+		blowAnimation.Initialize( piece, blowAnimationSpeed );
+		blowAnimations.Add( blowAnimation );
 	}
 
 	public IEnumerator RotateSelection( TupleSelection selection, float degrees )
@@ -84,30 +147,32 @@ public class AnimationManager : ManagerBase<AnimationManager>
 		Vector3 initialRotation = new Vector3();
 		Vector3 targetRotation = new Vector3( 0f, 0f, degrees );
 
+		HexagonPiece piece1 = selection.Tuple.piece1;
+		HexagonPiece piece2 = selection.Tuple.piece2;
+		HexagonPiece piece3 = selection.Tuple.piece3;
+
 		Vector3 selectionCenter = selection.transform.localPosition;
-		Vector3 dir1 = selection.Tuple.piece1.transform.localPosition - selectionCenter;
-		Vector3 dir2 = selection.Tuple.piece2.transform.localPosition - selectionCenter;
-		Vector3 dir3 = selection.Tuple.piece3.transform.localPosition - selectionCenter;
+		Vector3 dir1 = piece1.transform.localPosition - selectionCenter;
+		Vector3 dir2 = piece2.transform.localPosition - selectionCenter;
+		Vector3 dir3 = piece3.transform.localPosition - selectionCenter;
 
 		float t = 0f;
 		float tMultiplier = selectionRotateSpeed / Mathf.Abs( degrees );
-		while( true )
+		while( ( t = t + Time.deltaTime * tMultiplier ) < 1f )
 		{
-			t += Time.deltaTime * tMultiplier;
-			if( t > 1f )
-				t = 1f;
-
 			Quaternion rotation = Quaternion.Euler( Vector3.LerpUnclamped( initialRotation, targetRotation, t ) );
 
 			selection.transform.localRotation = currentAngles * rotation;
-			selection.Tuple.piece1.transform.localPosition = selectionCenter + rotation * dir1;
-			selection.Tuple.piece2.transform.localPosition = selectionCenter + rotation * dir2;
-			selection.Tuple.piece3.transform.localPosition = selectionCenter + rotation * dir3;
-
-			if( t >= 1f )
-				yield break;
+			piece1.transform.localPosition = selectionCenter + rotation * dir1;
+			piece2.transform.localPosition = selectionCenter + rotation * dir2;
+			piece3.transform.localPosition = selectionCenter + rotation * dir3;
 
 			yield return null;
 		}
+
+		selection.transform.localRotation = currentAngles * Quaternion.Euler( targetRotation );
+		piece1.transform.localPosition = GridManager.Instance[piece1.X].CalculatePositionAt( piece1.Y );
+		piece2.transform.localPosition = GridManager.Instance[piece2.X].CalculatePositionAt( piece2.Y );
+		piece3.transform.localPosition = GridManager.Instance[piece3.X].CalculatePositionAt( piece3.Y );
 	}
 }

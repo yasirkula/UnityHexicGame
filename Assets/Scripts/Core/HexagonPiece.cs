@@ -13,6 +13,12 @@ public class HexagonPiece : MonoBehaviour
 	public int Y { get; private set; }
 	public int ColorIndex { get; private set; }
 
+	public int SortingOrder
+	{
+		get { return spriteRenderer.sortingOrder; }
+		set { spriteRenderer.sortingOrder = value; }
+	}
+
 	public void SetPosition( int x, int y )
 	{
 		X = x;
@@ -23,11 +29,6 @@ public class HexagonPiece : MonoBehaviour
 	{
 		ColorIndex = colorIndex;
 		spriteRenderer.color = color;
-	}
-
-	public void SetSelected( bool isSelected )
-	{
-		spriteRenderer.sortingOrder = isSelected ? 1 : 0;
 	}
 
 	public Corner GetClosestCorner( Vector2 localPoint )

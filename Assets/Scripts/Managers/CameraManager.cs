@@ -14,9 +14,15 @@ public class CameraManager : ManagerBase<CameraManager>
 
 	public float YTop { get; private set; }
 
-	private void Start()
+	protected override void Awake()
 	{
-		YTop = _camera.ViewportToWorldPoint( new Vector3( 0f, 1.1f, 0f ) ).y;
+		base.Awake();
+		DeviceOrientationManager.OnScreenOrientationChanged += ScreenOrientationChanged;
+	}
+
+	private void OnDestroy()
+	{
+		DeviceOrientationManager.OnScreenOrientationChanged -= ScreenOrientationChanged;
 	}
 
 	public void SetGridBounds( Bounds bounds )
@@ -39,6 +45,11 @@ public class CameraManager : ManagerBase<CameraManager>
 		return _camera.WorldToScreenPoint( worldPoint );
 	}
 
+	private void ScreenOrientationChanged( ScreenOrientation orientation )
+	{
+		RecalculateOrthographicSize();
+	}
+
 	private void RecalculateOrthographicSize()
 	{
 		if( gridExtents == null )
@@ -54,5 +65,7 @@ public class CameraManager : ManagerBase<CameraManager>
 			_camera.orthographicSize = height;
 		else
 			_camera.orthographicSize = width / screenAspect;
+
+		YTop = _camera.ViewportToWorldPoint( new Vector3( 0f, 1.1f, 0f ) ).y;
 	}
 }

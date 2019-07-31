@@ -14,9 +14,9 @@
 
 	public void SetSelected( bool isSelected )
 	{
-		piece1.SetSelected( isSelected );
-		piece2.SetSelected( isSelected );
-		piece3.SetSelected( isSelected );
+		piece1.SortingOrder = isSelected ? 1 : 0;
+		piece2.SortingOrder = isSelected ? 1 : 0;
+		piece3.SortingOrder = isSelected ? 1 : 0;
 	}
 
 	public void RotateClockwise( int count = 1 )
