@@ -612,6 +612,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9b4531ae7f653a4ea561f92d5c2a3eb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  bombExplosionCounter: 8
+  bombInterval: 1000
   inputReceiver: {fileID: 245580054}
   selection: {fileID: 4390366038918942839, guid: 94b82ff3e1eee7347ab14b8c34baf941,
     type: 3}
@@ -868,6 +870,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   piecePrefab: {fileID: 7853192583357434029, guid: 7cad06d34eabc2d46953457e8e79bfc0,
     type: 3}
+  bombPrefab: {fileID: 1111234069322458785, guid: a426dc6932bfb8e4ea8068b958f80ef9,
+    type: 3}
 --- !u!1 &1621776577
 GameObject:
   m_ObjectHideFlags: 0
@@ -1117,8 +1121,8 @@ MonoBehaviour:
   - {r: 0.8901961, g: 0.2901961, b: 0.23137255, a: 1}
   - {r: 0.91764706, g: 0.7490196, b: 0.105882354, a: 1}
   - {r: 0.5803922, g: 0.34509805, b: 0.6431373, a: 1}
-  gridWidth: 4
-  gridHeight: 4
+  gridWidth: 8
+  gridHeight: 9
 --- !u!4 &1976193278
 Transform:
   m_ObjectHideFlags: 0

@@ -6,9 +6,13 @@ public class PoolManager : ManagerBase<PoolManager>
 #pragma warning disable 0649
 	[SerializeField]
 	private HexagonPiece piecePrefab;
+
+	[SerializeField]
+	private HexagonBomb bombPrefab;
 #pragma warning restore 0649
 
 	private readonly SimplePool<HexagonPiece> piecePool = new SimplePool<HexagonPiece>();
+	private readonly SimplePool<HexagonBomb> bombPool = new SimplePool<HexagonBomb>();
 	private readonly SimplePool<HexagonMatch> matchPool = new SimplePool<HexagonMatch>();
 	private readonly SimplePool<AnimationManager.MovePieceAnimation> moveAnimationsPool = new SimplePool<AnimationManager.MovePieceAnimation>();
 	private readonly SimplePool<AnimationManager.BlowPieceAnimation> blowAnimationsPool = new SimplePool<AnimationManager.BlowPieceAnimation>();
@@ -26,12 +30,29 @@ public class PoolManager : ManagerBase<PoolManager>
 			{
 				HexagonPiece result = Instantiate( piecePrefab );
 				SceneManager.MoveGameObjectToScene( result.gameObject, gameObject.scene ); // So that the piece will be DontDestroyOnLoad
+				result.transform.localScale = new Vector3( GridManager.PIECE_WIDTH, GridManager.PIECE_WIDTH, GridManager.PIECE_WIDTH );
 
 				return result;
 			};
 			piecePool.OnPop = ( piece ) => piece.gameObject.SetActive( true );
 			piecePool.OnPush = ( piece ) => piece.gameObject.SetActive( false );
 			piecePool.Populate( 32 );
+
+			bombPool.CreateFunction = () =>
+			{
+				HexagonBomb result = Instantiate( bombPrefab );
+				SceneManager.MoveGameObjectToScene( result.gameObject, gameObject.scene ); // So that the bomb will be DontDestroyOnLoad
+				result.transform.localScale = new Vector3( GridManager.PIECE_WIDTH, GridManager.PIECE_WIDTH, GridManager.PIECE_WIDTH );
+
+				return result;
+			};
+			bombPool.OnPop = ( bomb ) => bomb.gameObject.SetActive( true );
+			bombPool.OnPush = ( bomb ) =>
+			{
+				bomb.gameObject.SetActive( false );
+				bomb.transform.SetParent( null, false );
+			};
+			bombPool.Populate( 2 );
 
 			matchPool.CreateFunction = () => new HexagonMatch();
 			matchPool.OnPush = ( match ) => match.Clear();
@@ -48,6 +69,11 @@ public class PoolManager : ManagerBase<PoolManager>
 	public HexagonPiece PopPiece()
 	{
 		return piecePool.Pop();
+	}
+
+	public HexagonBomb PopBomb()
+	{
+		return bombPool.Pop();
 	}
 
 	public HexagonMatch PopMatch()
@@ -68,6 +94,11 @@ public class PoolManager : ManagerBase<PoolManager>
 	public void Push( HexagonPiece piece )
 	{
 		piecePool.Push( piece );
+	}
+
+	public void Push( HexagonBomb bomb )
+	{
+		bombPool.Push( bomb );
 	}
 
 	public void Push( HexagonMatch match )

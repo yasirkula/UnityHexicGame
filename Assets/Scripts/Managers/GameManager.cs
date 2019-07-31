@@ -7,25 +7,54 @@ public class GameManager : ManagerBase<GameManager>
 {
 #pragma warning disable 0649
 	[SerializeField]
+	private int scoreMultiplier = 5;
+
+	[SerializeField]
+	private int bombExplosionCounter = 8;
+
+	[SerializeField]
+	private int bombInterval = 1000;
+
+	[SerializeField]
 	private InputReceiver inputReceiver;
 
 	[SerializeField]
 	private TupleSelection selection;
 #pragma warning restore 0649
 
+	private readonly List<HexagonBomb> bombs = new List<HexagonBomb>( 2 );
+
 	private bool isBusy = false;
+	private bool isQuitting = false;
+
 	private int score = 0;
+	private int nextBombSpawnScore;
 
 	protected override void Awake()
 	{
 		base.Awake();
-		selection = Instantiate( selection );
-	}
 
-	private void Start()
-	{
+		selection = Instantiate( selection );
+		selection.transform.localScale = new Vector3( GridManager.PIECE_WIDTH, GridManager.PIECE_WIDTH, GridManager.PIECE_WIDTH );
+
+		nextBombSpawnScore = bombInterval;
+
 		inputReceiver.ClickEvent += OnClick;
 		inputReceiver.SwipeEvent += OnSwipe;
+	}
+
+	private void OnApplicationQuit()
+	{
+		isQuitting = true;
+	}
+
+	private void OnDestroy()
+	{
+		if( !isQuitting )
+		{
+			for( int i = bombs.Count - 1; i >= 0; i-- )
+				PoolManager.Instance.Push( bombs[i] );
+		}
 	}
 
 	private void OnClick( PointerEventData eventData )
@@ -59,11 +88,11 @@ public class GameManager : ManagerBase<GameManager>
 
 		if( match == null )
 			selection.Tuple.RotateClockwise( clockwise ? 1 : -1 );
-		
-		StartCoroutine( RotateTuple( clockwise, rotationAmount, match ) );
+
+		StartCoroutine( RotateSelection( clockwise, rotationAmount, match ) );
 	}
 
-	private IEnumerator RotateTuple( bool clockwise, int amount, HexagonMatch match )
+	private IEnumerator RotateSelection( bool clockwise, int amount, HexagonMatch match )
 	{
 		isBusy = true;
 		yield return StartCoroutine( AnimationManager.Instance.RotateSelection( selection, amount * ( clockwise ? -120f : 120f ) ) );
@@ -73,9 +102,21 @@ public class GameManager : ManagerBase<GameManager>
 			selection.IsVisible = false;
 
 			yield return new WaitForSeconds( 0.5f );
+
+			int possibleBombColumn = match[Random.Range( 0, match.Count )].X;
 			ProcessMatch( match );
 
-			yield return StartCoroutine( GridManager.Instance.FillBlankSlots() );
+			Coroutine fillBlanksCoroutine = StartCoroutine( GridManager.Instance.FillBlankSlots() );
+			if( score >= nextBombSpawnScore )
+			{
+				nextBombSpawnScore += bombInterval;
+
+				HexagonBomb bomb = PoolManager.Instance.PopBomb();
+				bomb.Initialize( GridManager.Instance[possibleBombColumn][GridManager.Instance.Height - 1], bombExplosionCounter + 1 ); // It will decrement after this round
+				bombs.Add( bomb );
+			}
+
+			yield return fillBlanksCoroutine;
 
 			List<HexagonMatch> matchesOnGrid = GridManager.Instance.GetAllMatchingPiecesOnGrid();
 			while( matchesOnGrid != null && matchesOnGrid.Count > 0 )
@@ -88,28 +129,59 @@ public class GameManager : ManagerBase<GameManager>
 				matchesOnGrid = GridManager.Instance.GetAllMatchingPiecesOnGrid();
 			}
 
+			for( int i = bombs.Count - 1; i >= 0; i-- )
+			{
+				if( bombs[i].Tick() )
+				{
+					GameOver();
+					yield break;
+				}
+			}
+
 			selection.SelectTupleAt( selection.transform.localPosition );
+
+			if( GridManager.Instance.CheckDeadlock() )
+			{
+				GameOver();
+				yield break;
+			}
 		}
 
-		if( GridManager.Instance.CheckDeadlock() )
-			GameOver();
-		else
-			isBusy = false;
+		isBusy = false;
 	}
 
 	private void ProcessMatch( HexagonMatch match )
 	{
-		score += 5 * match.Count;
-		
+		score += scoreMultiplier * match.Count;
 		UIManager.Instance.UpdateScore( score );
-		GridManager.Instance.DestroyMatchingPieces( match );
+
+		for( int i = match.Count - 1; i >= 0; i-- )
+		{
+			GridManager.Instance[match[i].X][match[i].Y] = null;
+			AnimationManager.Instance.BlowPieceAway( match[i] );
+
+			for( int j = bombs.Count - 1; j >= 0; j-- )
+			{
+				if( bombs[j].AttachedPiece == match[i] )
+				{
+					PoolManager.Instance.Push( bombs[j] );
+
+					// This bomb is defused, move the last bomb to this index
+					if( j < bombs.Count - 1 )
+						bombs[j] = bombs[bombs.Count - 1];
+
+					bombs.RemoveAt( bombs.Count - 1 );
+				}
+			}
+		}
+
 		PoolManager.Instance.Push( match );
 	}
 
 	private void GameOver()
 	{
 		isBusy = true;
-		
+
 		int highscore = PlayerPrefs.GetInt( "Highscore", 0 );
 		if( score > highscore )
 		{

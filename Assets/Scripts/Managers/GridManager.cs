@@ -337,18 +337,6 @@ public class GridManager : ManagerBase<GridManager>
 		}
 	}
 
-	public void DestroyMatchingPieces( HexagonMatch match )
-	{
-		if( match != null )
-		{
-			for( int i = match.Count - 1; i >= 0; i-- )
-			{
-				grid[match[i].X][match[i].Y] = null;
-				AnimationManager.Instance.BlowPieceAway( match[i] );
-			}
-		}
-	}
-
 	public IEnumerator FillBlankSlots()
 	{
 		for( int x = 0; x < gridWidth; x++ )

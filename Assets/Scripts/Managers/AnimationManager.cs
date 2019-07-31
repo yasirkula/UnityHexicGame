@@ -48,7 +48,7 @@ public class AnimationManager : ManagerBase<AnimationManager>
 		public void Initialize( HexagonPiece piece, float animationSpeed )
 		{
 			this.piece = piece;
-			velocity = ( Random.insideUnitCircle + new Vector2( 0f, 0.15f ) ) * ( GridManager.Instance.Width * 1.2f );
+			velocity = ( Random.insideUnitCircle + new Vector2( 0f, 0.15f ) ) * ( GridManager.Instance.Width * 1.2f ) * GridManager.PIECE_WIDTH;
 
 			t = 0f;
 			tMultiplier = animationSpeed;
@@ -62,13 +62,15 @@ public class AnimationManager : ManagerBase<AnimationManager>
 			velocity.y -= deltaTime * 10f;
 			if( t < 1f )
 			{
+				float scale = ( 1f - t ) * GridManager.PIECE_WIDTH;
+
 				piece.transform.Translate( velocity * deltaTime );
-				piece.transform.localScale = new Vector3( 1f - t, 1f - t, 1f - t );
+				piece.transform.localScale = new Vector3( scale, scale, scale );
 
 				return true;
 			}
 
-			piece.transform.localScale = new Vector3( 1f, 1f, 1f );
+			piece.transform.localScale = new Vector3( GridManager.PIECE_WIDTH, GridManager.PIECE_WIDTH, GridManager.PIECE_WIDTH );
 			piece.SortingOrder = 0;
 			PoolManager.Instance.Push( piece );
 
