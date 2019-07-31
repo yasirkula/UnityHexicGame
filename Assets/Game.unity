@@ -281,7 +281,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5fa72508d0750174e8a4559d69742a6b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  swipeAmount: 15
+  sensitivity: 6
 --- !u!1 &306181649
 GameObject:
   m_ObjectHideFlags: 0
@@ -612,6 +612,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9b4531ae7f653a4ea561f92d5c2a3eb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  scoreMultiplier: 5
   bombExplosionCounter: 8
   bombInterval: 1000
   inputReceiver: {fileID: 245580054}

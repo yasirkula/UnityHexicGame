@@ -5,27 +5,8 @@ public class DeviceOrientationManager : MonoBehaviour
 {
 	private const float ORIENTATION_CHECK_INTERVAL = 0.5f;
 
+	private static ScreenOrientation currentOrientation;
 	private float nextOrientationCheckTime;
-
-	private static ScreenOrientation m_currentOrientation;
-	public static ScreenOrientation CurrentOrientation
-	{
-		get
-		{
-			return m_currentOrientation;
-		}
-		private set
-		{
-			if( m_currentOrientation != value )
-			{
-				m_currentOrientation = value;
-				Screen.orientation = value;
-
-				if( OnScreenOrientationChanged != null )
-					OnScreenOrientationChanged( value );
-			}
-		}
-	}
 
 	public static event System.Action<ScreenOrientation> OnScreenOrientationChanged;
 
@@ -39,7 +20,7 @@ public class DeviceOrientationManager : MonoBehaviour
 
 	private void Awake()
 	{
-		m_currentOrientation = Screen.orientation;
+		currentOrientation = Screen.orientation;
 		nextOrientationCheckTime = Time.realtimeSinceStartup + 1f;
 	}
 
@@ -47,12 +28,13 @@ public class DeviceOrientationManager : MonoBehaviour
 	{
 		if( Time.realtimeSinceStartup >= nextOrientationCheckTime )
 		{
-			switch( Input.deviceOrientation )
+			ScreenOrientation orientation = Screen.orientation;
+			if( currentOrientation != orientation )
 			{
-				case DeviceOrientation.LandscapeLeft: CurrentOrientation = ScreenOrientation.LandscapeLeft; break;
-				case DeviceOrientation.LandscapeRight: CurrentOrientation = ScreenOrientation.LandscapeRight; break;
-				case DeviceOrientation.PortraitUpsideDown: CurrentOrientation = ScreenOrientation.PortraitUpsideDown; break;
-				case DeviceOrientation.Portrait: CurrentOrientation = ScreenOrientation.Portrait; break;
+				currentOrientation = orientation;
+
+				if( OnScreenOrientationChanged != null )
+					OnScreenOrientationChanged( orientation );
 			}
 
 			nextOrientationCheckTime = Time.realtimeSinceStartup + ORIENTATION_CHECK_INTERVAL;

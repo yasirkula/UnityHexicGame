@@ -5,7 +5,7 @@ public class InputReceiver : MonoBehaviour, IPointerClickHandler, IBeginDragHand
 {
 #pragma warning disable 0649
 	[SerializeField]
-	private float swipeAmount = 15f;
+	private float sensitivity = 6f;
 	private float swipeAmountSqr;
 #pragma warning restore 0649
 
@@ -16,7 +16,9 @@ public class InputReceiver : MonoBehaviour, IPointerClickHandler, IBeginDragHand
 
 	private void Awake()
 	{
-		swipeAmountSqr = swipeAmount * swipeAmount;
+		// For 1024 x 768, swipe amount is equal to "sensitivity * 9"
+		swipeAmountSqr = sensitivity * ( Screen.width + Screen.height ) * 0.005f;
+		swipeAmountSqr *= swipeAmountSqr;
 	}
 
 	public void OnPointerClick( PointerEventData eventData )

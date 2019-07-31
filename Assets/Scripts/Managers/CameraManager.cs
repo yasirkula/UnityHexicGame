@@ -58,7 +58,7 @@ public class CameraManager : ManagerBase<CameraManager>
 		float width = gridExtents.Value.x;
 		float height = gridExtents.Value.y;
 
-		float screenAspect = _camera.aspect;
+		float screenAspect = Screen.width / (float) Screen.height;
 		float levelAspect = width / height;
 
 		if( screenAspect >= levelAspect )
