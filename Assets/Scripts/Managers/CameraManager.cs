@@ -12,6 +12,13 @@ public class CameraManager : ManagerBase<CameraManager>
 
 	private Vector2? gridExtents;
 
+	public float YTop { get; private set; }
+
+	private void Start()
+	{
+		YTop = _camera.ViewportToWorldPoint( new Vector3( 0f, 1.1f, 0f ) ).y;
+	}
+
 	public void SetGridBounds( Bounds bounds )
 	{
 		Vector3 position = bounds.center;

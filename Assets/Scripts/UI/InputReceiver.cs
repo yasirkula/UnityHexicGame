@@ -24,7 +24,7 @@ public class InputReceiver : MonoBehaviour, IPointerClickHandler, IBeginDragHand
 		if( ClickEvent != null )
 			ClickEvent( eventData );
 	}
-	
+
 	public void OnBeginDrag( PointerEventData eventData )
 	{
 		eventData.pointerPress = null;

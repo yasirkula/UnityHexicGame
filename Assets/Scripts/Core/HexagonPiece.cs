@@ -1,34 +1,23 @@
 ﻿using UnityEngine;
 
-public struct HexagonTuple
-{
-	public readonly HexagonPiece piece1, piece2, piece3;
-
-	public HexagonTuple( HexagonPiece piece1, HexagonPiece piece2, HexagonPiece piece3 )
-	{
-		this.piece1 = piece1;
-		this.piece2 = piece2;
-		this.piece3 = piece3;
-	}
-
-	public void SetSelected( bool isSelected )
-	{
-		piece1.SetSelected( isSelected );
-		piece2.SetSelected( isSelected );
-		piece3.SetSelected( isSelected );
-	}
-}
-
-public enum Corner { BottomLeft, Left, TopLeft, TopRight, Right, BottomRight };
-
 public class HexagonPiece : MonoBehaviour
 {
+	public enum Corner { BottomLeft, Left, TopLeft, TopRight, Right, BottomRight };
+
 #pragma warning disable 0649
 	[SerializeField]
 	private SpriteRenderer spriteRenderer;
 #pragma warning restore 0649
 
+	public int X { get; private set; }
+	public int Y { get; private set; }
 	public int ColorIndex { get; private set; }
+
+	public void SetPosition( int x, int y )
+	{
+		X = x;
+		Y = y;
+	}
 
 	public void SetColor( int colorIndex, Color color )
 	{
@@ -44,9 +33,9 @@ public class HexagonPiece : MonoBehaviour
 	public Corner GetClosestCorner( Vector2 localPoint )
 	{
 		bool leftSide = localPoint.x < 0f;
-		Vector2 p1 = new Vector2( GridManager.HEX_WIDTH * ( leftSide ? -0.25f : 0.25f ), GridManager.HEX_HEIGHT * -0.5f );
-		Vector2 p2 = new Vector2( GridManager.HEX_WIDTH * ( leftSide ? -0.5f : 0.5f ), 0f );
-		Vector2 p3 = new Vector2( GridManager.HEX_WIDTH * ( leftSide ? -0.25f : 0.25f ), GridManager.HEX_HEIGHT * 0.5f );
+		Vector2 p1 = new Vector2( GridManager.PIECE_WIDTH * ( leftSide ? -0.25f : 0.25f ), GridManager.PIECE_HEIGHT * -0.5f );
+		Vector2 p2 = new Vector2( GridManager.PIECE_WIDTH * ( leftSide ? -0.5f : 0.5f ), 0f );
+		Vector2 p3 = new Vector2( GridManager.PIECE_WIDTH * ( leftSide ? -0.25f : 0.25f ), GridManager.PIECE_HEIGHT * 0.5f );
 
 		if( ( p1 - localPoint ).sqrMagnitude < ( p2 - localPoint ).sqrMagnitude )
 		{
@@ -62,11 +51,9 @@ public class HexagonPiece : MonoBehaviour
 		return leftSide ? Corner.TopLeft : Corner.TopRight;
 	}
 
-	public Corner GetClosestPickableCorner( Vector2 localPoint, int x, int y )
+	public Corner GetPickableCorner( Corner corner )
 	{
-		Corner corner = GetClosestCorner( localPoint );
-
-		if( x == 0 )
+		if( X == 0 )
 		{
 			if( corner == Corner.BottomLeft )
 				corner = Corner.BottomRight;
@@ -75,7 +62,7 @@ public class HexagonPiece : MonoBehaviour
 			else if( corner == Corner.TopLeft )
 				corner = Corner.TopRight;
 		}
-		else if( x == GridManager.Instance.Width - 1 )
+		else if( X == GridManager.Instance.Width - 1 )
 		{
 			if( corner == Corner.BottomRight )
 				corner = Corner.BottomLeft;
@@ -85,14 +72,14 @@ public class HexagonPiece : MonoBehaviour
 				corner = Corner.TopLeft;
 		}
 
-		if( y == 0 )
+		if( Y == 0 )
 		{
 			if( corner == Corner.BottomLeft )
 				corner = Corner.Left;
 			else if( corner == Corner.BottomRight )
 				corner = Corner.Right;
 
-			if( x % 2 == 0 )
+			if( X % 2 == 0 )
 			{
 				if( corner == Corner.Left )
 					corner = Corner.TopLeft;
@@ -100,14 +87,14 @@ public class HexagonPiece : MonoBehaviour
 					corner = Corner.TopRight;
 			}
 		}
-		else if( y == GridManager.Instance.Height - 1 )
+		else if( Y == GridManager.Instance.Height - 1 )
 		{
 			if( corner == Corner.TopLeft )
 				corner = Corner.Left;
 			else if( corner == Corner.TopRight )
 				corner = Corner.Right;
 
-			if( x % 2 == 1 )
+			if( X % 2 == 1 )
 			{
 				if( corner == Corner.Left )
 					corner = Corner.BottomLeft;

@@ -10,8 +10,9 @@ GameObject:
   m_Component:
   - component: {fileID: 8211838309725779889}
   - component: {fileID: 8211838309725779888}
+  - component: {fileID: 4390366038918942839}
   m_Layer: 0
-  m_Name: SelectionOutline
+  m_Name: GridSelection
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -67,7 +68,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 2
   m_Sprite: {fileID: 21300000, guid: 43f5636da570b0e4fabb7940b76e5ef7, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -79,3 +80,15 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &4390366038918942839
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8211838309725779891}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e45703a87bde9ce48a292a4a88292c91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
