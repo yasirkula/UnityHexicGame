@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// Plays animations on hexagon pieces and likewise
 public class AnimationManager : ManagerBase<AnimationManager>
 {
+	// Moves the hexagon piece from its current position to its target position on the grid
 	public class MovePieceAnimation
 	{
 		private HexagonPiece piece;
@@ -37,6 +39,7 @@ public class AnimationManager : ManagerBase<AnimationManager>
 		}
 	}
 
+	// Applies random force to a hexagon piece and shrinks it in the meantime to destroy the piece in a fashionable way
 	public class BlowPieceAnimation
 	{
 		private HexagonPiece piece;
@@ -53,7 +56,7 @@ public class AnimationManager : ManagerBase<AnimationManager>
 			t = 0f;
 			tMultiplier = animationSpeed;
 
-			piece.SortingOrder = 2;
+			piece.SortingOrder = 2; // These pieces should be drawn above the others
 		}
 
 		public bool Execute( float deltaTime )
@@ -94,6 +97,7 @@ public class AnimationManager : ManagerBase<AnimationManager>
 	private readonly List<MovePieceAnimation> moveAnimations = new List<MovePieceAnimation>( 64 );
 	private readonly List<BlowPieceAnimation> blowAnimations = new List<BlowPieceAnimation>( 8 );
 
+	// These animations are actually reused, so pool them
 	protected override void ReleaseResources()
 	{
 		for( int i = moveAnimations.Count - 1; i >= 0; i-- )
@@ -106,6 +110,7 @@ public class AnimationManager : ManagerBase<AnimationManager>
 		blowAnimations.Clear();
 	}
 
+	// Play the animations
 	private void Update()
 	{
 		float deltaTime = Time.deltaTime;
@@ -155,6 +160,7 @@ public class AnimationManager : ManagerBase<AnimationManager>
 		blowAnimations.Add( blowAnimation );
 	}
 
+	// Rotate the selected hexagon pieces on the grid around the center point by degrees
 	public IEnumerator RotateSelection( TupleSelection selection, float degrees )
 	{
 		Quaternion currentAngles = Quaternion.Euler( selection.transform.localEulerAngles );
@@ -165,6 +171,7 @@ public class AnimationManager : ManagerBase<AnimationManager>
 		HexagonPiece piece2 = selection.Tuple.piece2;
 		HexagonPiece piece3 = selection.Tuple.piece3;
 
+		// Rotation happens by rotation the direction vectors
 		Vector3 selectionCenter = selection.transform.localPosition;
 		Vector3 dir1 = piece1.transform.localPosition - selectionCenter;
 		Vector3 dir2 = piece2.transform.localPosition - selectionCenter;
@@ -174,6 +181,7 @@ public class AnimationManager : ManagerBase<AnimationManager>
 		float tMultiplier = selectionRotateSpeed / Mathf.Abs( degrees );
 		while( ( t = t + Time.deltaTime * tMultiplier ) < 1f )
 		{
+			// Using Quaternion.LerpUnclamped applies no rotation for degrees=360, this is actually smart but not desirable in this case
 			Quaternion rotation = Quaternion.Euler( Vector3.LerpUnclamped( initialRotation, targetRotation, t ) );
 
 			selection.transform.localRotation = currentAngles * rotation;
@@ -184,6 +192,8 @@ public class AnimationManager : ManagerBase<AnimationManager>
 			yield return null;
 		}
 
+		// Can't rely on floating point precision, rotated pieces may deviate from their intended positions after a number of turns,
+		// put the rotated pieces at their exact position after the rotation is complete
 		selection.transform.localRotation = currentAngles * Quaternion.Euler( targetRotation );
 		piece1.transform.localPosition = GridManager.Instance[piece1.X].CalculatePositionAt( piece1.Y );
 		piece2.transform.localPosition = GridManager.Instance[piece2.X].CalculatePositionAt( piece2.Y );

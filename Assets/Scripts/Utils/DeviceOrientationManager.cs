@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 
-// Taken from: https://github.com/yasirkula/UnityGenericPool/blob/master/SimplePool.cs
+// Taken from: https://gist.github.com/yasirkula/e056df5e7af1ce2de98c6372d0f26ade
+// Raises an event when screen orientation changes on mobile devices
 public class DeviceOrientationManager : MonoBehaviour
 {
 	private const float ORIENTATION_CHECK_INTERVAL = 0.5f;

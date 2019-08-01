@@ -1,6 +1,7 @@
 ﻿using TMPro;
 using UnityEngine;
 
+// Attaches itself to a hexagon piece and ends the game if counter reaches zero
 public class HexagonBomb : MonoBehaviour
 {
 #pragma warning disable 0649

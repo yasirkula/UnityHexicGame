@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 
+// A selection around a tuple, the selection is highlighted with a white outline (by default)
 public class TupleSelection : MonoBehaviour
 {
 	public HexagonTuple Tuple { get; private set; }
@@ -27,6 +28,7 @@ public class TupleSelection : MonoBehaviour
 		gameObject.SetActive( false );
 	}
 
+	// If the point is located inside the grid, finds the tuple closest to the point and selects it
 	public void SelectTupleAt( Vector2 position )
 	{
 		IsVisible = false;
@@ -36,6 +38,7 @@ public class TupleSelection : MonoBehaviour
 		{
 			Vector3 positionAverage = ( tuple.piece1.transform.localPosition + tuple.piece2.transform.localPosition + tuple.piece3.transform.localPosition ) / 3f;
 
+			// A selection always has two vertical pieces and one adjacent piece to the right or to the left
 			bool rightOriented;
 			if( tuple.piece1.X == tuple.piece2.X )
 				rightOriented = tuple.piece3.X > tuple.piece1.X;

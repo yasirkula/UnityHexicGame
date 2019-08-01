@@ -1,4 +1,5 @@
-﻿public struct HexagonTuple
+﻿// A tuple consists of three adjacent hexagon pieces
+public struct HexagonTuple
 {
 	public readonly HexagonPiece piece1, piece2, piece3;
 
@@ -12,6 +13,7 @@
 		this.piece3 = piece3;
 	}
 
+	// Selected pieces are drawn above the others so that they don't fall behind the other pieces while being rotated
 	public void SetSelected( bool isSelected )
 	{
 		piece1.SortingOrder = isSelected ? 1 : 0;
@@ -19,6 +21,10 @@
 		piece3.SortingOrder = isSelected ? 1 : 0;
 	}
 
+	// Changes the order of the pieces in the tuple, this doesn't actually change their transform.position since it is
+	// often desirable to rotate the tuple for certain calculations (e.g. to check if there will be a match at certain rotation)
+	// without actually modifying their transform.position values. The transform.position values are usually animated to
+	// reach the target position (e.g. while rotation the selection or adding new pieces to the grid from above)
 	public void RotateClockwise( int count = 1 )
 	{
 		count = count % 3;

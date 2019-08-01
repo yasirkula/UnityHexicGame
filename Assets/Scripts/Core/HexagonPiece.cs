@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 
+// A single hexagon piece on the grid
 public class HexagonPiece : MonoBehaviour
 {
 	public enum Corner { BottomLeft, Left, TopLeft, TopRight, Right, BottomRight };
@@ -9,10 +10,11 @@ public class HexagonPiece : MonoBehaviour
 	private SpriteRenderer spriteRenderer;
 #pragma warning restore 0649
 
-	public int X { get; private set; }
+	public int X { get; private set; } // Position on the grid
 	public int Y { get; private set; }
 	public int ColorIndex { get; private set; }
 
+	// Used to draw some pieces above the others
 	public int SortingOrder
 	{
 		get { return spriteRenderer.sortingOrder; }
@@ -31,6 +33,7 @@ public class HexagonPiece : MonoBehaviour
 		spriteRenderer.color = color;
 	}
 
+	// Finds the corner that is closest to the local point inside the piece (in range [-0.5,0.5])
 	public Corner GetClosestCorner( Vector2 localPoint )
 	{
 		bool leftSide = localPoint.x < 0f;
@@ -52,6 +55,9 @@ public class HexagonPiece : MonoBehaviour
 		return leftSide ? Corner.TopLeft : Corner.TopRight;
 	}
 
+	// E.g. a piece on the leftmost column doesn't have any adjacent pieces at its left corners,
+	// if the "corner" doesn't have adjacent pieces, returns an opposite corner that is
+	// guaranteed to have adjacent pieces
 	public Corner GetPickableCorner( Corner corner )
 	{
 		if( X == 0 )

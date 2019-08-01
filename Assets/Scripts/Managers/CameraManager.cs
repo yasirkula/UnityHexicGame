@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 
+// Handles the camera related operations
 public class CameraManager : ManagerBase<CameraManager>
 {
 #pragma warning disable 0649
@@ -12,11 +13,14 @@ public class CameraManager : ManagerBase<CameraManager>
 
 	private Vector2? gridExtents;
 
+	// Pieces added to the grid from above are created at this height
 	public float YTop { get; private set; }
 
 	protected override void Awake()
 	{
 		base.Awake();
+
+		// When screen orientation changes on mobile devices, recalculate the orthographic size
 		DeviceOrientationManager.OnScreenOrientationChanged += ScreenOrientationChanged;
 	}
 
@@ -25,6 +29,8 @@ public class CameraManager : ManagerBase<CameraManager>
 		DeviceOrientationManager.OnScreenOrientationChanged -= ScreenOrientationChanged;
 	}
 
+	// Apply the bounds to the camera so that the camera centers the grid and changes its
+	// orthographic size to draw all hexagon pieces on the grid
 	public void SetGridBounds( Bounds bounds )
 	{
 		Vector3 position = bounds.center;
@@ -50,6 +56,8 @@ public class CameraManager : ManagerBase<CameraManager>
 		RecalculateOrthographicSize();
 	}
 
+	// Calculate orthographic size so that all hexagon pieces are drawn and
+	// there is a fixed amount of padding at the edges
 	private void RecalculateOrthographicSize()
 	{
 		if( gridExtents == null )

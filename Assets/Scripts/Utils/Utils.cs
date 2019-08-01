@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 
+// Utility functions
 public static class Utils
 {
 #if UNITY_EDITOR
@@ -13,6 +14,7 @@ public static class Utils
 	// ++
 #endif
 
+	// Finds the row and column indices of the hexagon piece that is located at the position
 	public static void GetCoordinatesFrom( Vector2 position, out int x, out int y )
 	{
 		float column = ( position.x - GridManager.PIECE_WIDTH * 0.5f ) / GridManager.PIECE_DELTA_X;

@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
+// Handles pooling of commonly used objects for memory efficiency and reduced GC
 public class PoolManager : ManagerBase<PoolManager>
 {
 #pragma warning disable 0649
@@ -21,15 +22,17 @@ public class PoolManager : ManagerBase<PoolManager>
 	{
 		base.Awake();
 
+		// Initialize the pools
 		if( Instance == this )
 		{
+			// This manager should persist after level restarts
 			transform.SetParent( null, false );
 			DontDestroyOnLoad( gameObject );
 
 			piecePool.CreateFunction = () =>
 			{
 				HexagonPiece result = Instantiate( piecePrefab );
-				SceneManager.MoveGameObjectToScene( result.gameObject, gameObject.scene ); // So that the piece will be DontDestroyOnLoad
+				SceneManager.MoveGameObjectToScene( result.gameObject, gameObject.scene ); // So that the piece will be DontDestroyOnLoad'ed
 				result.transform.localScale = new Vector3( GridManager.PIECE_WIDTH, GridManager.PIECE_WIDTH, GridManager.PIECE_WIDTH );
 
 				return result;
@@ -41,7 +44,7 @@ public class PoolManager : ManagerBase<PoolManager>
 			bombPool.CreateFunction = () =>
 			{
 				HexagonBomb result = Instantiate( bombPrefab );
-				SceneManager.MoveGameObjectToScene( result.gameObject, gameObject.scene ); // So that the bomb will be DontDestroyOnLoad
+				SceneManager.MoveGameObjectToScene( result.gameObject, gameObject.scene ); // So that the bomb will be DontDestroyOnLoad'ed
 				result.transform.localScale = new Vector3( GridManager.PIECE_WIDTH, GridManager.PIECE_WIDTH, GridManager.PIECE_WIDTH );
 
 				return result;
@@ -50,7 +53,7 @@ public class PoolManager : ManagerBase<PoolManager>
 			bombPool.OnPush = ( bomb ) =>
 			{
 				bomb.gameObject.SetActive( false );
-				bomb.transform.SetParent( null, false );
+				bomb.transform.SetParent( null, false ); // Bombs are attached to their target hexagon pieces, release the bomb
 			};
 			bombPool.Populate( 2 );
 

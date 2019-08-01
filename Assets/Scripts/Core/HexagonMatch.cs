@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 
+// A match on the grid, it can consist of any number of hexagon pieces but these pieces are
+// guaranteed to be adjacent to each other and have the same color
 public class HexagonMatch
 {
 	private readonly List<HexagonPiece> matchingPieces = new List<HexagonPiece>( 6 );
