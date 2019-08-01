@@ -59,7 +59,7 @@ public class AnimationManager : ManagerBase<AnimationManager>
 		public bool Execute( float deltaTime )
 		{
 			t += deltaTime * tMultiplier;
-			velocity.y -= deltaTime * 10f;
+			velocity.y -= deltaTime * 2.5f * GridManager.PIECE_HEIGHT * GridManager.Instance.Height;
 			if( t < 1f )
 			{
 				float scale = ( 1f - t ) * GridManager.PIECE_WIDTH;
@@ -93,6 +93,18 @@ public class AnimationManager : ManagerBase<AnimationManager>
 
 	private readonly List<MovePieceAnimation> moveAnimations = new List<MovePieceAnimation>( 64 );
 	private readonly List<BlowPieceAnimation> blowAnimations = new List<BlowPieceAnimation>( 8 );
+
+	protected override void ReleaseResources()
+	{
+		for( int i = moveAnimations.Count - 1; i >= 0; i-- )
+			PoolManager.Instance.Push( moveAnimations[i] );
+
+		for( int i = blowAnimations.Count - 1; i >= 0; i-- )
+			PoolManager.Instance.Push( blowAnimations[i] );
+
+		moveAnimations.Clear();
+		blowAnimations.Clear();
+	}
 
 	private void Update()
 	{

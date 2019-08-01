@@ -60,8 +60,6 @@ public class GridManager : ManagerBase<GridManager>
 	private readonly List<HexagonMatch> matchesOnGrid = new List<HexagonMatch>( 4 );
 	private readonly HashSet<HexagonPiece> matchesOnGridSet = new HashSet<HexagonPiece>();
 
-	private bool isQuitting = false;
-
 	private Column[] grid;
 	private Vector2 gridSize;
 
@@ -76,15 +74,10 @@ public class GridManager : ManagerBase<GridManager>
 		}
 	}
 
-	private void OnApplicationQuit()
+	protected override void ReleaseResources()
 	{
-		isQuitting = true;
-	}
-
-	private void OnDestroy()
-	{
-		if( !isQuitting )
-			DestroyGrid();
+		DestroyGrid();
+		grid = null;
 	}
 
 	private bool CreateGrid()
@@ -130,6 +123,9 @@ public class GridManager : ManagerBase<GridManager>
 
 	private void DestroyGrid()
 	{
+		if( grid == null )
+			return;
+
 		for( int x = 0; x < gridWidth; x++ )
 		{
 			for( int y = 0; y < gridHeight; y++ )

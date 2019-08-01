@@ -25,7 +25,6 @@ public class GameManager : ManagerBase<GameManager>
 	private readonly List<HexagonBomb> bombs = new List<HexagonBomb>( 2 );
 
 	private bool isBusy = false;
-	private bool isQuitting = false;
 
 	private int score = 0;
 	private int nextBombSpawnScore;
@@ -43,18 +42,12 @@ public class GameManager : ManagerBase<GameManager>
 		inputReceiver.SwipeEvent += OnSwipe;
 	}
 
-	private void OnApplicationQuit()
+	protected override void ReleaseResources()
 	{
-		isQuitting = true;
-	}
+		for( int i = bombs.Count - 1; i >= 0; i-- )
+			PoolManager.Instance.Push( bombs[i] );
 
-	private void OnDestroy()
-	{
-		if( !isQuitting )
-		{
-			for( int i = bombs.Count - 1; i >= 0; i-- )
-				PoolManager.Instance.Push( bombs[i] );
-		}
+		bombs.Clear();
 	}
 
 	private void OnClick( PointerEventData eventData )

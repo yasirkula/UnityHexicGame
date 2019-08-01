@@ -20,7 +20,7 @@ public class CameraManager : ManagerBase<CameraManager>
 		DeviceOrientationManager.OnScreenOrientationChanged += ScreenOrientationChanged;
 	}
 
-	private void OnDestroy()
+	protected override void ReleaseResources()
 	{
 		DeviceOrientationManager.OnScreenOrientationChanged -= ScreenOrientationChanged;
 	}
